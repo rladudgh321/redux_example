@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/redux/4.2.1/redux.js"></script>
+  </head>
+  <body>
+    <div id="subject"></div>
+    <div id="topic"></div>
+    <div id="article"></div>
+    <div id="control"></div>
+    <script type="text/javascript">
+      function subject(){
+        document.querySelector('#subject').innerHTML = `
+        <header>
+          <h1>WEB</h1>
+        </header>
+        `;
+      }
+      function toc(){
+        var state = store.getState();
+        var liTags='';
+        for(var i=0;i<state.contents.length;i++){
+          liTags = liTags + `
+          <li><a onclick="
+            event.preventDefault();
+            var action = {type:'SELECT', id:${state.contents[i].id}};
+            store.dispatch(action);
+            "
+            href="${state.contents[i].id}">${state.contents[i].title}</a></li>
+          `;
+        }
+
+        document.querySelector('#topic').innerHTML=`
+        <nav>
+          <ol>
+            ${liTags}
+          </ol>
+        </nav>
+        `;
+      }
+      function article(){
+        var state = store.getState();
+        var i = 0;
+        var aTitle, aDesc;
+        while(i<state.contents.length){
+          if(state.contents[i].id === state.selected_id){
+            aTitle = state.contents[i].title;
+            aDesc = state.contents[i].desc;
+            break;
+          }
+
+          i = i + 1;
+        }
+        document.querySelector('#article').innerHTML=`
+        <article>
+          <h2>${aTitle}</h2>
+          <p>${aDesc}</p>
+        </article>
+        `;
+      }
+      function control(){
+        document.querySelector('#control').innerHTML=`
+        <ul>
+          <li><a href="/create">create</a></li>
+          <li><input type="button" value="Delete"></li>
+        </ul>
+        `;
+      }
+      //redux
+      function reducer(state,action){
+        // console.log(state,action);
+        if(state === undefined){
+          return {
+            selected_id:null,
+            contents : [
+            {id:1, title:'html', desc:'html is ...'},
+            {id:2, title:'css', desc:'css is ...'}
+          ]
+          }
+        }
+        var newState;
+        if(action.type === 'SELECT'){
+          newState = Object.assign(state,{
+            selected_id:action.id
+          });
+        }
+        console.log(action, state, newState);
+        return newState;
+      }
+      var store = Redux.createStore(reducer);
+      store.subscribe(article);
+      //call function
+      subject();
+      toc();
+      article();
+      control();
+    </script>
+
+
+
+
+  </body>
+</html>
