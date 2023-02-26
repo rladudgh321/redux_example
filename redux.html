@@ -72,6 +72,13 @@
                 <p>${adesc}</p>
             </article>
             `;
+        }else if(state.mode === 'welcome'){
+          document.querySelector('#article').innerHTML = `
+            <article>
+                <h2>welcome</h2>
+                <p>redux!!</p>
+            </article>
+            `;
         }
     }
     function control(){
@@ -82,7 +89,9 @@
             event.preventDefault();
             store.dispatch({type:'change_mode', mode:'create'});
             " href="/create">create</a></li>
-          <li><input type="button" value="Delete"></li>
+          <li><input onclick="
+            store.dispatch({type:'delete'});
+            " type="button" value="Delete"></li>
         </ul>
       </control>
       `;
@@ -104,7 +113,7 @@
         }
         let newState;
         if(action.type === 'select'){
-            newState = Object.assign({},state,{selected_id:action.id});
+            newState = Object.assign({},state,{selected_id:action.id, mode:'read'});
         }else if(action.type === 'change_mode'){
             newState = Object.assign({},state,{mode:'create'});
         }else if(action.type === 'create'){
@@ -116,6 +125,17 @@
                 contents:newContents,
                 mode:'read'
             })
+        }else if(action.type==='delete'){
+          let newContents = [];
+          for(let i=0;i<state.contents.length;i++){
+            if(state.contents[i].id !==state.selected_id){
+              newContents.push(state.contents[i]);
+            }
+          }
+          newState = Object.assign({},state,{
+            contents:newContents,
+            mode:'welcome'
+          });
         }
         console.log(action, state, newState);
         return newState;
