@@ -7,101 +7,130 @@
   <title>Document</title>
   <script src="./node_modules/redux/dist/redux.min.js"></script>
 </head>
-  <body>
-    <div id="subject"></div>
-    <div id="topic"></div>
-    <div id="article"></div>
-    <div id="control"></div>
-    <script type="text/javascript">
-      function subject(){
-        document.querySelector('#subject').innerHTML = `
-        <header>
-          <h1>WEB</h1>
-        </header>
-        `;
-      }
-      function toc(){
-        var state = store.getState();
-        var liTags='';
-        for(var i=0;i<state.contents.length;i++){
-          liTags = liTags + `
+<body>
+  <div id="header"></div>
+  <div id="nav"></div>
+  <div id="article"></div>
+  <div id="control"></div>
+
+  <script>
+    function header(){
+      document.querySelector('#header').innerHTML = `
+      <header>
+        <h1>web</h1>
+      </header>
+      `;
+    }
+    function nav(){
+        const state = store.getState();
+        let lis ='';
+        for(let i=0;i<state.contents.length;i++){
+            lis += `
+            <li><a onclick="
+                event.preventDefault();
+                store.dispatch({type:'select', id:${state.contents[i].id}});
+                "href="${state.contents[i].id}">${state.contents[i].title}</a></li>
+            `;
+        }
+      document.querySelector('#nav').innerHTML = `
+      <nav>
+        <ol>
+          ${lis}
+        </ol>
+      </nav>
+      `;
+    }
+    function article(){
+        const state = store.getState();
+        if(state.mode === 'create'){
+            document.querySelector('#article').innerHTML=`
+            
+            <form onsubmit="
+                event.preventDefault();
+                let _title=this.title.value;
+                let _desc=this.desc.value;
+                store.dispatch({type:'create',title:_title,desc:_desc});
+            ">
+                <p><input type="text" name="title" placeholder="title"></p>
+                <p><textarea name="desc" placeholder="desc"></textarea></p>
+                <p><input type="submit"></p>
+            </form>
+            `;
+        }else if(state.mode ==='read'){
+            const state = store.getState();
+            let atitle,adesc;
+            for(let i=0;i<state.contents.length;i++){
+                if(state.contents[i].id === state.selected_id){
+                    atitle = state.contents[i].title;
+                    adesc = state.contents[i].desc;
+                    break;
+                }
+            }
+            document.querySelector('#article').innerHTML = `
+            <article>
+                <h2>${atitle}</h2>
+                <p>${adesc}</p>
+            </article>
+            `;
+        }
+    }
+    function control(){
+      document.querySelector('#control').innerHTML = `
+      <control>
+        <ul>
           <li><a onclick="
             event.preventDefault();
-            var action = {type:'SELECT', id:${state.contents[i].id}};
-            store.dispatch(action);
-            "
-            href="${state.contents[i].id}">${state.contents[i].title}</a></li>
-          `;
-        }
-
-        document.querySelector('#topic').innerHTML=`
-        <nav>
-          <ol>
-            ${liTags}
-          </ol>
-        </nav>
-        `;
-      }
-      function article(){
-        var state = store.getState();
-        var i = 0;
-        var aTitle, aDesc;
-        while(i<state.contents.length){
-          if(state.contents[i].id === state.selected_id){
-            aTitle = state.contents[i].title;
-            aDesc = state.contents[i].desc;
-            break;
-          }
-
-          i = i + 1;
-        }
-        document.querySelector('#article').innerHTML=`
-        <article>
-          <h2>${aTitle}</h2>
-          <p>${aDesc}</p>
-        </article>
-        `;
-      }
-      function control(){
-        document.querySelector('#control').innerHTML=`
-        <ul>
-          <li><a href="/create">create</a></li>
+            store.dispatch({type:'change_mode', mode:'create'});
+            " href="/create">create</a></li>
           <li><input type="button" value="Delete"></li>
         </ul>
-        `;
-      }
-      //redux
-      function reducer(state,action){
-        // console.log(state,action);
+      </control>
+      `;
+    }
+
+    //redux
+
+    function reducer(state,action){
         if(state === undefined){
-          return {
-            selected_id:null,
-            contents : [
-            {id:1, title:'html', desc:'html is ...'},
-            {id:2, title:'css', desc:'css is ...'}
-          ]
-          }
+            return {
+                max_id:2,
+                mode:'read',
+                selected_id:1,
+                contents: [
+                    {id:1, title:'html', desc: 'html is ...'},
+                    {id:2, title:'css', desc:'css is ...'}
+                ]
+            }
         }
-        var newState;
-        if(action.type === 'SELECT'){
-          newState = Object.assign(state,{
-            selected_id:action.id
-          });
+        let newState;
+        if(action.type === 'select'){
+            newState = Object.assign({},state,{selected_id:action.id});
+        }else if(action.type === 'change_mode'){
+            newState = Object.assign({},state,{mode:'create'});
+        }else if(action.type === 'create'){
+            let newMaxId = state.max_id+1;
+            let newContents = state.contents.concat();
+            newContents.push({id:newMaxId, title:action.title, desc:action.desc});
+            newState = Object.assign({},state, {
+                max_id:newMaxId,
+                contents:newContents,
+                mode:'read'
+            })
         }
         console.log(action, state, newState);
         return newState;
-      }
-      var store = Redux.createStore(reducer);
-      store.subscribe(article);
-      //call function
-      subject();
-      toc();
-      article();
-      control();
-    </script>
+    }
 
+    const store = Redux.createStore(reducer);
+    store.subscribe(article);
+    store.subscribe(nav);
+    // store.subscribe();
+    //call function
+    header();
+    nav();
+    article();
+    control();
 
-
-
-  </body>
+  </script>
+</body>
 </html>
